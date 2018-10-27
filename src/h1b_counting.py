@@ -20,7 +20,7 @@ def output_to_file(filename, input_dict, total_certs, is_states):
         stream is buffered and the buffer is cleared at consistent sizes.
         Follow this output format description:
         First line:
-            TOP_OCCUPATIONS for TOP_STATES;NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE
+            TOP_OCCUPATIONS or TOP_STATES;NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE
         Subsequent lines:
             occupation or state;number certified applications;percentage of applications
         where percentage of applications = those certified / total_certs rounded to tenths and
@@ -29,31 +29,25 @@ def output_to_file(filename, input_dict, total_certs, is_states):
         first_column = 'TOP_STATES'
     else:
         first_column = 'TOP_OCCUPATIONS'
-    with open(filename) as outfile:
+    with open(filename, 'w') as outfile:
         outfile.write(first_column + ';NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE\n')
-        for i in soc_names.keys():
-            # Here I do some "fancy" math to make sure rounding is correct. I'm truncating at 2 decimal places
-            # before rounding.
-            intermediate = int(input_dict[i][1] / total_certs * 100)
-            percentage   = round(intermediate / 100, 1)
-            outfile.write( '{};{};{};{f.1}%'.format(input_dict[i][0], input_dict[i][1], percentage) )
-        print('\noccupations:')
-        print('{:>35}{:>10}{:>10}{:>16}'.format('occupation','how many', 'certs', 'certs ratio'))
-        for i in soc_names.keys():
-            print( '{:>35}{:>10}{:>10}{:>15}%'.format(i, soc_names[i][0], soc_names[i][1], soc_names[i][1] / total_certs) )
-        print('\nstates:')
-        print('{:>5}{:>10}{:>10}{:>16}'.format('state','how many', 'certs', 'certs ratio'))
-        for i in states.keys():
-            print( '{:>5}{:>10}{:>10}{:>15}%'.format(i, states[i][0], states[i][1], states[i][1] / total_certs) )
-        print( '\ntotal certs:' + str(total_certs) )
+        print('{:>35}{:>15}{:>8}{:>12}'.format(first_column, 'number certed', 'percent', 'total certs'))
+        for i in input_dict.keys():
+            # Add .00009 to try to ensure that rounding works. It won't affect actual rounding, but ought to
+            # properly deal with vagueries of floats
+            percentage = round(input_dict[i][1] / total_certs + .000009, 3) * 100
+            outfile.write( '{};{};{:.1f}%\n'.format(i, input_dict[i][1], percentage) )
+            print( '{:>35}{:>15}{:7.1f}%{:>12}'.format(i, input_dict[i][1], percentage, total_certs) )
+
+        # print('{:>35}{:>10}{:>10}{:>16}'.format(first_column, ';NUMBER_CERTIFIED_APPLICATIONS', ';PERCENTAGE;','total_certs'))
         # print(row['SOC_NAME'], row['WORKSITE_STATE'], row['CASE_STATUS'])
 
 
 
 def main():
     input_filename        = argv[1]
-    # occup_output_filename = argv[2]
-    # state_output_filename = argv[3]
+    occup_output_filename = argv[2]
+    state_output_filename = argv[3]
 
 # # Input Dataset
 
@@ -88,27 +82,9 @@ def main():
                 states[row['WORKSITE_STATE']][1] += 1
                 total_certs                      += 1
 
-    # Each line of the `top_10_occupations.txt` file should contain these fields in this order:
-    # 1. __`TOP_OCCUPATIONS`__: Use the occupation name associated with an application's
-    #       Standard Occupational Classification (SOC) code
-    # 2. __`NUMBER_CERTIFIED_APPLICATIONS`__: Number of applications that have been certified for that occupation.
-    #       An application is considered certified if it has a case status of `Certified`
-    # 3. __`PERCENTAGE`__: % of applications that have been certified for that occupation compared to total number of certified
-    #       applications regardless of occupation.
-    print('\noccupations:')
-    print('{:>35}{:>10}{:>10}{:>16}'.format('occupation','how many', 'certs', 'certs ratio'))
-    for i in soc_names.keys():
-        intermediate = int(soc_names[i][1] / total_certs * 100)
-        percentage   = round(intermediate / 100, 1)
-        print( '{:>35}{:>10}{:>10}{:>15}%'.format(i, soc_names[i][0], soc_names[i][1], percentage) )
-    print('\nstates:')
-    print('{:>5}{:>10}{:>10}{:>16}'.format('state','how many', 'certs', 'certs ratio'))
-    for i in states.keys():
-        intermediate = int(states[i][1] / total_certs * 100)
-        percentage   = round(intermediate / 100, 1)
-        print( '{:>5}{:>10}{:>10}{:>15}%'.format(i, states[i][0], states[i][1], percentage) )
-    print( '\ntotal certs:' + str(total_certs) )
-    # print(row['SOC_NAME'], row['WORKSITE_STATE'], row['CASE_STATUS'])
+    output_to_file(state_output_filename, states,    total_certs, True)
+    output_to_file(occup_output_filename, soc_names, total_certs, False)
+
 
 
 # Instructions
