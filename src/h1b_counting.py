@@ -10,9 +10,45 @@
 # should produce the results in the `output` folder
 # without needing to change the code.
 
-from csv      import DictReader, writer, QUOTE_MINIMAL  # I'm considering csv to be internal.
+from csv      import DictReader, QUOTE_MINIMAL  # I'm considering csv to be internal.
 from sys      import argv
 # ./input/h1b_input.csv ./output/top_10_occupations.txt ./output/top_10_states.txt
+
+def output_to_file(filename, input_dict, total_certs, is_states):
+    ''' Output contents of `dictionary` to output file denoted by `filename`.
+        This is O(1) memory because all Python argument passing is by reference and the output to a
+        stream is buffered and the buffer is cleared at consistent sizes.
+        Follow this output format description:
+        First line:
+            TOP_OCCUPATIONS for TOP_STATES;NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE
+        Subsequent lines:
+            occupation or state;number certified applications;percentage of applications
+        where percentage of applications = those certified / total_certs rounded to tenths and
+        formatted to one decimal point. '''
+    if is_states:
+        first_column = 'TOP_STATES'
+    else:
+        first_column = 'TOP_OCCUPATIONS'
+    with open(filename) as outfile:
+        outfile.write(first_column + ';NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE\n')
+        for i in soc_names.keys():
+            # Here I do some "fancy" math to make sure rounding is correct. I'm truncating at 2 decimal places
+            # before rounding.
+            intermediate = int(input_dict[i][1] / total_certs * 100)
+            percentage   = round(intermediate / 100, 1)
+            outfile.write( '{};{};{};{f.1}%'.format(input_dict[i][0], input_dict[i][1], percentage) )
+        print('\noccupations:')
+        print('{:>35}{:>10}{:>10}{:>16}'.format('occupation','how many', 'certs', 'certs ratio'))
+        for i in soc_names.keys():
+            print( '{:>35}{:>10}{:>10}{:>15}%'.format(i, soc_names[i][0], soc_names[i][1], soc_names[i][1] / total_certs) )
+        print('\nstates:')
+        print('{:>5}{:>10}{:>10}{:>16}'.format('state','how many', 'certs', 'certs ratio'))
+        for i in states.keys():
+            print( '{:>5}{:>10}{:>10}{:>15}%'.format(i, states[i][0], states[i][1], states[i][1] / total_certs) )
+        print( '\ntotal certs:' + str(total_certs) )
+        # print(row['SOC_NAME'], row['WORKSITE_STATE'], row['CASE_STATUS'])
+
+
 
 def main():
     input_filename        = argv[1]
@@ -52,13 +88,26 @@ def main():
                 states[row['WORKSITE_STATE']][1] += 1
                 total_certs                      += 1
 
-    print('occupations:')
+    # Each line of the `top_10_occupations.txt` file should contain these fields in this order:
+    # 1. __`TOP_OCCUPATIONS`__: Use the occupation name associated with an application's
+    #       Standard Occupational Classification (SOC) code
+    # 2. __`NUMBER_CERTIFIED_APPLICATIONS`__: Number of applications that have been certified for that occupation.
+    #       An application is considered certified if it has a case status of `Certified`
+    # 3. __`PERCENTAGE`__: % of applications that have been certified for that occupation compared to total number of certified
+    #       applications regardless of occupation.
+    print('\noccupations:')
+    print('{:>35}{:>10}{:>10}{:>16}'.format('occupation','how many', 'certs', 'certs ratio'))
     for i in soc_names.keys():
-        print( i, soc_names[i][0], soc_names[i][1] )
-    print('states:')
+        intermediate = int(soc_names[i][1] / total_certs * 100)
+        percentage   = round(intermediate / 100, 1)
+        print( '{:>35}{:>10}{:>10}{:>15}%'.format(i, soc_names[i][0], soc_names[i][1], percentage) )
+    print('\nstates:')
+    print('{:>5}{:>10}{:>10}{:>16}'.format('state','how many', 'certs', 'certs ratio'))
     for i in states.keys():
-        print( i, states[i][0], states[i][1] )
-    print( total_certs )
+        intermediate = int(states[i][1] / total_certs * 100)
+        percentage   = round(intermediate / 100, 1)
+        print( '{:>5}{:>10}{:>10}{:>15}%'.format(i, states[i][0], states[i][1], percentage) )
+    print( '\ntotal certs:' + str(total_certs) )
     # print(row['SOC_NAME'], row['WORKSITE_STATE'], row['CASE_STATUS'])
 
 
