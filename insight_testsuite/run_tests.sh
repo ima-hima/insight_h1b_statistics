@@ -62,7 +62,7 @@ function compare_outputs {
 
   DIFF_RESULT1=$(diff -bB ${PROJECT_ANSWER_PATH1} ${TEST_ANSWER_PATH1} | wc -l)
   if [ "${DIFF_RESULT1}" -eq "0" ] && [ -f ${PROJECT_ANSWER_PATH1} ]; then
-    echo -e "[${color_green}PASS${color_norm}]: ${test_folder} ${OUTPUT_FILENAME}"
+    echo -e "[${color_green}PASS${color_norm}]: ${test_folder} ${OUTPUT_FILENAME1}"
     NUM_OUTPUT_FILES_PASSED=$(($NUM_OUTPUT_FILES_PASSED+1))
   else
     echo -e "[${color_red}FAIL${color_norm}]: ${test_folder}"
@@ -72,7 +72,7 @@ function compare_outputs {
   OUTPUT_FILENAME2=top_10_states.txt
   PROJECT_ANSWER_PATH2=${GRADER_ROOT}/temp/output/${OUTPUT_FILENAME2}
   TEST_ANSWER_PATH2=${GRADER_ROOT}/tests/${test_folder}/output/${OUTPUT_FILENAME2}
-   
+
   DIFF_RESULT2=$(diff -bB ${PROJECT_ANSWER_PATH2} ${TEST_ANSWER_PATH2} | wc -l)
   if [ "${DIFF_RESULT2}" -eq "0" ] && [ -f ${PROJECT_ANSWER_PATH2} ]; then
     echo -e "[${color_green}PASS${color_norm}]: ${test_folder} ${OUTPUT_FILENAME2}"
