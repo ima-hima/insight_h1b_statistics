@@ -3,10 +3,10 @@ from operator import itemgetter
 from sys      import argv
 
 
-def sort_and_output(filename, input_dict, total_certs, is_states):
-    ''' Sort contents of input_dict, then output contents of `dictionary` to output file denoted by `filename`.
-        This is O(1) memory because all Python argument passing is by reference and the output to a
-        stream is buffered and the buffer is cleared at consistent sizes. '''
+def sort_dict(input_dict):
+    ''' Sort contents of input_dict.
+        Sort by number of certified occurrences. If there are ties, sort by number of appearances of keys,
+        *alphabetically* by key name. '''
 
     # Have to copy the dict into a list, because we're unable to retrieve the keys if we sort by the values.
     # After that sorting is simple. Sorting two lists sorts by first item, then second, etc.
@@ -16,6 +16,13 @@ def sort_and_output(filename, input_dict, total_certs, is_states):
     intermediate_sort = sorted(to_be_sorted, key=itemgetter(0))
     final_sort = sorted(intermediate_sort, key=itemgetter(1), reverse=True)
 
+    return final_sort
+
+
+
+def output_results(filename, final_sort, total_certs, is_states):
+    ''' Output `final_sort` to `filename`. `total_certs` is used to compute percentage of certified for this
+        key out of all certified items. `is_state` determines value of first column in first row. '''
     if is_states:
         first_column = 'TOP_STATES'
     else:
@@ -84,8 +91,10 @@ def main():
                 states[row['WORKSITE_STATE']][0] += 1
                 total_certs                      += 1
 
-    sort_and_output(state_output_filename, states,    total_certs, True)
-    sort_and_output(occup_output_filename, soc_names, total_certs, False)
+    to_output = sort_dict(states)
+    output_results(state_output_filename, to_output, total_certs, True)
+    to_output = sort_dict(soc_names)
+    output_results(occup_output_filename, to_output, total_certs, False)
 
 
 if __name__ == "__main__": main()
