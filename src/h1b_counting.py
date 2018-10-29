@@ -52,8 +52,8 @@ def output_results(filename, final_sort, total_certs, is_states):
 
 def main():
     ''' Get input from `input_filename`, count both soc's and states, also count number of each that is certified.
-        Keep track of total certifications. Call `sort_and_output()` to output results to `occup_output_filename` and
-        `state_output_filename`. See docs in `sort_and_output()` for sorting and output instructions. '''
+        Keep track of total certifications. Call `sort_dict()` and `output_results()` to output results to `occup_output_filename` and
+        `state_output_filename`. See docs in `sort_dict()` and `output_results()` for sorting and output instructions. '''
     input_filename        = argv[1]
     occup_output_filename = argv[2]
     state_output_filename = argv[3]
@@ -70,7 +70,7 @@ def main():
     with open(input_filename) as input_stream:
         # Note: Each year of data can have different columns. Check **File Structure** docs before development.
         # Because of this I am using DictReader, which references by header name.
-        # If I was worried that the headers might sometimes be lowercase I'd need to use csv.reader and capture
+        # If I were worried that the headers might sometimes be lowercase I'd need to use csv.reader and capture
         # the first line as column headers to get column indices
         reader = DictReader(input_stream, delimiter=';')
         for row in reader:
