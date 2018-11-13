@@ -67,6 +67,7 @@ def main():
     states      = dict()
     soc_names   = dict()
     total_certs = 0
+
     with open(input_filename) as input_stream:
         # Note: Each year of data can have different columns. Check **File Structure** docs before development.
         # Because of this I am using DictReader, which references by header name.
@@ -90,6 +91,78 @@ def main():
                 soc_names[row['SOC_NAME']][0]    += 1
                 states[row['WORKSITE_STATE']][0] += 1
                 total_certs                      += 1
+
+    to_output = sort_dict(states)
+    output_results(state_output_filename, to_output, total_certs, True)
+    to_output = sort_dict(soc_names)
+    output_results(occup_output_filename, to_output, total_certs, False)
+
+
+def main2():
+    ''' More flexible version of main(), where we can't use the header names in csv library because they vary by year. In this
+        case we need to find the index of each header first, then pull those indices on each read. Rest is same:
+        Get input from `input_filename`, count both soc's and states, also count number of each that is certified.
+        Keep track of total certifications. Call `sort_dict()` and `output_results()` to output results to `occup_output_filename` and
+        `state_output_filename`. See docs in `sort_dict()` and `output_results()` for sorting and output instructions. '''
+    input_filename        = argv[1]
+    occup_output_filename = argv[2]
+    state_output_filename = argv[3]
+
+# # Input Dataset
+
+    # states and soc_names are dictionaries with
+    #   key:   state names or occupation, respectively
+    #   value: list of lenth 2: [total certifications for this key, number of occurences of this key]
+    # order of items in list is for sorting, as sort procedes in order of items in list.
+    states      = dict()
+    soc_names   = dict()
+    total_certs = 0
+
+    # Multiple years have different headers. I need to read the headers and find the correct header names.
+    # This is a little dicey, as they change year to year, see for instance the state. This works for
+    # 2013 forward.
+    with open(input_filename) as input_stream:
+        first_line = input_stream.readline()
+    first_line = first_line.split(';')
+    for position in first_line:
+        position = position.lower() # Saves an infinitesimal amount of time, but also code is cleaner.
+                                    # And maybe some years are in lowercase?
+        # print(position)
+        if position.find('soc_name') >= 0:
+            # print('soc_name', position)
+            soc_name = position.upper()
+        elif position.find('state') >= 0:
+            # print('state', position)
+            if position.find('worksite') >= 0 or position.find('workloc1') >= 0:
+                # print('state', position)
+                state = position.upper()
+        elif position.find('status') >= 0:
+            # print('soc_status', position)
+            soc_status = position.upper()
+
+    with open(input_filename) as input_stream:
+        # Note: Each year of data can have different columns. Check **File Structure** docs before development.
+        # Because of this I am using DictReader, which references by header name.
+        # If I were worried that the headers might sometimes be lowercase I'd need to use csv.reader and capture
+        # the first line as column headers to get column indices
+        reader = DictReader(input_stream, delimiter=';')
+        for row in reader:
+            # For each row, collect soc name, state, and status. Store total number of certified cases in accumulator.
+            # Following code is duped, but seems reasonable to avoid extra fn calls.
+            try:
+                soc_names[row[soc_name]][1] += 1
+            except:
+                soc_names[row[soc_name]] = [0,1] # 0 certs, 1 soc
+            try:
+                states[row[state]][1] += 1
+            except:
+                states[row[state]] = [0,1] # 0 certs, 1 state
+
+            # I know I've created the appropriate lists at this point, so I can just add to certification counts.
+            if row[soc_status].lower() == 'certified':
+                soc_names[row[soc_name]][0] += 1
+                states[row[state]][0]       += 1
+                total_certs                 += 1
 
     to_output = sort_dict(states)
     output_results(state_output_filename, to_output, total_certs, True)
