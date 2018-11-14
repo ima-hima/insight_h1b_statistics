@@ -12,9 +12,11 @@ def sort_dict(input_dict):
     # After that sorting is simple. Sorting two lists sorts by first item, then second, etc.
     to_be_sorted = []
     for key in input_dict.keys():
-        to_be_sorted = [(key, input_dict[key])] + to_be_sorted
-    intermediate_sort = sorted(to_be_sorted, key=itemgetter(0))
-    final_sort = sorted(intermediate_sort, key=itemgetter(1), reverse=True)
+        to_be_sorted = [(key, input_dict[key])] + to_be_sorted # O(1), because concatenation
+    # Sort is stable, so I can sort first alphabetically, then by number of occurences and appearances.
+    # Second sort works correctly because Python sorts lists by index: if there's a tie on index 0, sort by index 1, etc.
+    intermediate_sort = sorted(to_be_sorted,      key=itemgetter(0))
+    final_sort        = sorted(intermediate_sort, key=itemgetter(1), reverse=True)
 
     return final_sort
 
@@ -61,7 +63,7 @@ def main():
 # # Input Dataset
 
     # states and soc_names are dictionaries with
-    #   key:   state names or occupation, respectively
+    #   key:   state names or occupations, respectively
     #   value: list of lenth 2: [total certifications for this key, number of occurences of this key]
     # order of items in list is for sorting, as sort procedes in order of items in list.
     states      = dict()
